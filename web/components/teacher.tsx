@@ -1,13 +1,13 @@
-"use client"
+"use client";
 import { useGLTF } from "@react-three/drei";
 import React from "react";
 
 export const teachers = ["Nanami", "Naoki"] as const;
 
-type Teachers = (typeof teachers)[number];
+export type TeacherOpt = (typeof teachers)[number];
 
 type Props = React.JSX.IntrinsicElements["group"] & {
-  teacher: Teachers;
+  teacher: TeacherOpt;
 };
 
 export const Teacher = ({ teacher, ...props }: Props) => {

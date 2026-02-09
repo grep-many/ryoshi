@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     response_format: {
       type: "json_object",
     },
-    max_completion_tokens:400
+    max_completion_tokens: 400,
   });
 
   if (!chatCompletion.choices[0].message.content)

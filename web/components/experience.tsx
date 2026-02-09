@@ -10,7 +10,7 @@ export const Experience = () => {
       <Environment preset="sunset" />
       <CameraManager />
       <ambientLight intensity={0.8} color={"pink"} />
-      <Teacher teacher={"Nanami"} position={[-1,-1.7,-3]} scale={1.5} rotation-y={degToRad(20)}/>
+      <Teacher teacher={"Nanami"} position={[-1, -1.7, -3]} scale={1.5} rotation-y={degToRad(20)} />
       <Gltf src="/models/classroom_default.glb" position={[0.2, -1.7, -2]} />
     </Canvas>
   );
