@@ -4,6 +4,7 @@ import { create } from "zustand";
 // --- Interfaces ---
 
 export interface JapaneseWord {
+  map: any;
   word: string;
   reading?: string;
 }
@@ -36,12 +37,13 @@ export interface Message {
 }
 
 export type SpeechType = "formal" | "casual";
+export type ClassRoomType = "default" | "alternative";
 
 interface AITeacherState {
   messages: Message[];
   currentMessage: Message | null;
   teacher: TeacherOpt;
-  classroom: string;
+  classroom: ClassRoomType;
   loading: boolean;
   furigana: boolean;
   english: boolean;
@@ -49,7 +51,7 @@ interface AITeacherState {
 
   // Actions
   setTeacher: (teacher: TeacherOpt) => void;
-  setClassroom: (classroom: string) => void;
+  setClassroom: (classroom: ClassRoomType) => void;
   setFurigana: (furigana: boolean) => void;
   setEnglish: (english: boolean) => void;
   setSpeech: (speech: SpeechType) => void;
