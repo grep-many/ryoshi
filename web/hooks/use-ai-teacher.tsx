@@ -124,47 +124,41 @@ export const useAITeacher = create<AITeacherState>((set, get) => ({
       set({ loading: false });
     }
   },
-
   playMessage: async (message: Message) => {
     set({ currentMessage: message });
 
-    if (!message.audioPlayer && message.answer) {
-      set({ loading: true });
+    if (message.answer) {
+      // 1. Cancel any current speech
+      window.speechSynthesis.cancel();
 
-      try {
-        const japaneseText = message.answer.japanese.map((word) => word.word).join(" ");
-        const audioRes = await fetch(
-          `/api/tts?teacher=${get().teacher}&text=${encodeURIComponent(japaneseText)}`,
-        );
+      // 2. Prepare the Japanese text
+      const japaneseText = message.answer.japanese.map((word) => word.word).join("");
+      const utterance = new SpeechSynthesisUtterance(japaneseText);
 
-        const audioBlob = await audioRes.blob();
-        const visemesHeader = audioRes.headers.get("visemes");
-        const visemes = visemesHeader ? JSON.parse(visemesHeader) : null;
+      // 3. Select a Japanese voice
+      const voices = window.speechSynthesis.getVoices();
+      const jaVoice = voices.find(v => v.lang.startsWith("ja")) || voices[0];
+      utterance.voice = jaVoice;
+      utterance.lang = "ja-JP";
 
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audioPlayer = new Audio(audioUrl);
-
-        message.visemes = visemes;
-        message.audioPlayer = audioPlayer;
-
-        message.audioPlayer.onended = () => {
-          set({ currentMessage: null });
-        };
-
-        set((state) => ({
-          loading: false,
-          messages: state.messages.map((m) => (m.id === message.id ? message : m)),
-        }));
-      } catch (error) {
-        console.error("TTS Request failed:", error);
-        set({ loading: false });
-        return;
+      // 4. Distinction Logic (Male vs Female)
+      if (get().teacher === "Naoki") {
+        // Naoki: Deeper pitch, slightly slower for a more masculine resonance
+        utterance.pitch = 0.8; 
+        utterance.rate = 0.85; 
+      } else {
+        // Nanami: Higher pitch, natural speed
+        utterance.pitch = 1.2;
+        utterance.rate = 1.0;
       }
-    }
 
-    if (message.audioPlayer) {
-      message.audioPlayer.currentTime = 0;
-      message.audioPlayer.play();
+      // 5. Handling Animation (Fake Visemes)
+      // Since browser TTS doesn't provide real visemes, we simulate them
+      utterance.onstart = () => set({ loading: false });
+      utterance.onend = () => set({ currentMessage: null });
+
+      // 6. Speak
+      window.speechSynthesis.speak(utterance);
     }
   },
 

@@ -1,53 +1,50 @@
 @import "tailwindcss";
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
-
 @theme {
-  /* Fonts */
+  /* Registering your Google Fonts variables from the layout */
   --font-sans: var(--font-roboto);
   --font-jp: var(--font-noto-sans-jp);
 
-  /* Custom Colors (Optional - lets you use text-foreground or bg-start) */
-  --color-foreground: rgb(var(--foreground-rgb));
-  --color-start: rgb(var(--background-start-rgb));
-  --color-end: rgb(var(--background-end-rgb));
+  /* Adding your custom gradients */
+  --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
+  --background-image-gradient-conic: conic-gradient(from 180deg at 50% 50%,
+      var(--tw-gradient-stops));
 
-  /* Gradients - Simplified for v4 */
-  --background-image-gradient-radial: radial-gradient(circle, var(--tw-gradient-stops));
-  --background-image-gradient-conic: conic-gradient(
-    from 180deg at 50% 50%,
-    var(--tw-gradient-stops)
-  );
+  /* Defining the RGB variables for your custom background logic */
+  --color-foreground-rgb: 0, 0, 0;
+  --color-background-start-rgb: 214, 219, 220;
+  --color-background-end-rgb: 255, 255, 255;
+}
+
+/* Dark mode overrides using the new v4 syntax if needed, 
+   or stick to standard CSS variables */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-foreground-rgb: 255, 255, 255;
+    --color-background-start-rgb: 0, 0, 0;
+    --color-background-end-rgb: 0, 0, 0;
+  }
 }
 
 @layer base {
   body {
-    color: var(--color-foreground);
-    background: linear-gradient(to bottom, transparent, var(--color-end)) var(--color-start);
-    @apply font-sans;
+    color: rgb(var(--color-foreground-rgb));
+    background: linear-gradient(to bottom,
+        transparent,
+        rgb(var(--color-background-end-rgb))) rgb(var(--color-background-start-rgb));
   }
 }
 
-/* Scrollbar styling remains the same as it's standard CSS */
+@utility text-balance {
+  text-wrap: balance;
+}
+
+/* Scrollbar Styles */
 ::-webkit-scrollbar {
-  width: 12px;
-  /* 24px is quite wide, 12px is more standard */
-  background-color: rgba(255, 255, 255, 0.1);
+  width: 24px;
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 ::-webkit-scrollbar-thumb {
   background-color: white;
-  border-radius: 10px;
 }

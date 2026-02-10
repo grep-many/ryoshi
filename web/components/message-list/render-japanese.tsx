@@ -6,7 +6,7 @@ export const RenderJapanese = ({ japanese }: Props) => {
   if (!japanese) return;
   const { furigana } = useAITeacher();
   return (
-    <p className="font-jp mt-2 flex flex-wrap gap-1 text-4xl font-bold text-white">
+    <div className="font-jp mt-2 flex flex-wrap gap-1 text-4xl font-bold text-white">
       {japanese.map((word, i) => (
         <span key={i} className="flex flex-col items-center justify-end">
           {furigana && word.reading && (
@@ -15,6 +15,6 @@ export const RenderJapanese = ({ japanese }: Props) => {
           {word.word}
         </span>
       ))}
-    </p>
+    </div>
   );
 };

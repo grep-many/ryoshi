@@ -1,6 +1,20 @@
 import { degToRad } from "three/src/math/MathUtils.js";
 
-export const itemPlacement = {
+type Placement = {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  scale?: number;
+};
+
+type ItemPlacement = {
+  [key: string]: {
+    classroom: Placement;
+    teacher: Placement;
+    board: Placement;
+  };
+};
+
+export const itemPlacement: ItemPlacement = {
   default: {
     classroom: {
       position: [0.2, -1.7, -2],
@@ -21,4 +35,4 @@ export const itemPlacement = {
     teacher: { position: [-1, -1.7, -3] },
     board: { position: [1.4, 0.84, -8] },
   },
-} as const;
+};

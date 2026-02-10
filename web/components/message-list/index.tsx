@@ -1,20 +1,23 @@
-import { useAITeacher } from "@/hooks";
-import React from "react";
-import { RenderJapanese } from "./render-japanese";
+"use client";
+
+import { useAITeacher, Message } from "@/hooks";
+import React, { useEffect, useRef } from "react";
 import { RenderEnglish } from "./render-english";
+import { RenderJapanese } from "./render-japanese";
 
-export const MessagesList = () => {
-  const { messages, playMessage, currentMessage, classroom, stopMessage } = useAITeacher();
+export const MessagesList: React.FC = () => {
+  const { messages, playMessage, stopMessage, currentMessage, classroom } = useAITeacher();
 
-  const container = React.useRef<HTMLDivElement>(null);
+  // 1. Properly type the Ref for an HTML Div element
+  const container = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
-    const view = container.current;
-    if (!view) return;
-    view.scrollTo({
-      top: view.scrollHeight,
-      behavior: "smooth",
-    });
+  useEffect(() => {
+    if (container.current) {
+      container.current.scrollTo({
+        top: container.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages.length]);
 
   return (
@@ -34,7 +37,8 @@ export const MessagesList = () => {
           <h2 className="font-jp text-8xl font-bold text-red-600/90 italic">ワワ先生日本語学校</h2>
         </div>
       )}
-      {messages.map((message, i) => (
+
+      {messages.map((message: Message, i: number) => (
         <div key={i}>
           <div className="flex">
             <div className="grow">
@@ -46,12 +50,20 @@ export const MessagesList = () => {
                 >
                   {message.speech}
                 </span>
-                <RenderEnglish englishText={message.answer?.english} />
+                {message.answer && <RenderEnglish englishText={message.answer.english} />}
               </div>
-              <RenderJapanese japanese={message.answer?.japanese} />
+
+              {message.answer && <RenderJapanese japanese={message.answer.japanese} />}
             </div>
-            {currentMessage === message ? (
-              <button className="text-white/65" onClick={() => stopMessage(message)}>
+
+            {/* Play/Stop Toggle */}
+            <button
+              className="text-white/65 transition-colors hover:text-white"
+              onClick={() =>
+                currentMessage === message ? stopMessage(message) : playMessage(message)
+              }
+            >
+              {currentMessage === message ? (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -71,9 +83,7 @@ export const MessagesList = () => {
                     d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 0 1 9 14.437V9.564Z"
                   />
                 </svg>
-              </button>
-            ) : (
-              <button className="text-white/65" onClick={() => playMessage(message)}>
+              ) : (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -93,36 +103,40 @@ export const MessagesList = () => {
                     d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z"
                   />
                 </svg>
-              </button>
-            )}
+              )}
+            </button>
           </div>
-          <div className="mt-5 rounded-xl bg-linear-to-br from-pink-200/20 to-pink-500/20 p-5">
-            <span className="inline-block bg-linear-to-b from-white/90 to-white/70 bg-clip-text pr-4 text-3xl font-bold text-transparent uppercase italic">
-              Grammar Breakdown
-            </span>
-            {message.answer?.grammarBreakdown.map((grammar, i) => (
-              <div key={i} className="mt-3">
-                {message.answer && message.answer.grammarBreakdown.length > 1 && (
-                  <>
-                    <RenderEnglish englishText={grammar.english} />
-                    <RenderJapanese japanese={grammar.japanese} />
-                  </>
-                )}
 
-                <div className="mt-3 flex flex-wrap items-end gap-3">
-                  {grammar.chunks.map((chunk, i) => (
-                    <div key={i} className="rounded-md bg-black/30 p-2">
-                      <p className="font-jp text-4xl text-white/90">
-                        <RenderJapanese japanese={chunk.japanese} />
-                      </p>
-                      <p className="text-2xl text-pink-300/90">{chunk.meaning}</p>
-                      <p className="text-2xl text-blue-400/90">{chunk.grammar}</p>
-                    </div>
-                  ))}
+          {/* Grammar Breakdown Section */}
+          {message.answer && (
+            <div className="mt-5 rounded-xl bg-linear-to-br from-pink-200/20 to-pink-500/20 p-5">
+              <span className="inline-block bg-linear-to-b from-white/90 to-white/70 bg-clip-text pr-4 text-3xl font-bold text-transparent uppercase italic">
+                Grammar Breakdown
+              </span>
+              {message.answer.grammarBreakdown.map((grammar, i) => (
+                <div key={i} className="mt-3">
+                  {message.answer!.grammarBreakdown.length > 1 && (
+                    <>
+                      <RenderEnglish englishText={grammar.english} />
+                      <RenderJapanese japanese={grammar.japanese} />
+                    </>
+                  )}
+
+                  <div className="mt-3 flex flex-wrap items-end gap-3">
+                    {grammar.chunks.map((chunk, j) => (
+                      <div key={j} className="rounded-md bg-black/30 p-2">
+                        <div className="font-jp text-4xl text-white/90">
+                          <RenderJapanese japanese={chunk.japanese} />
+                        </div>
+                        <p className="text-2xl text-pink-300/90">{chunk.meaning}</p>
+                        <p className="text-2xl text-blue-400/90">{chunk.grammar}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       ))}
     </div>

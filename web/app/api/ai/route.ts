@@ -17,12 +17,7 @@ export async function GET(req: NextRequest) {
   - english: the english version ex: "Do you live in Japan?"
   - japanese: the japanese translation in split into words ex: ${JSON.stringify(speechExample.japanese)}
   - grammarBreakdown: an explanation of the grammar structure per sentence ex: ${JSON.stringify(speechExample.grammarBreakdown)}
-  `, //can be added here
-        /*The object MUST contain exactly these keys: 
-        "english": (string), 
-        "japanese": (array of {word: string, reading: string}), 
-        "grammarBreakdown": (array). 
-        Never omit the "japanese" key. */
+  `, 
       },
       {
         role: "system",

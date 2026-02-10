@@ -1,4 +1,4 @@
-export const CAMERA_POSITIONS = {
+export const CAMERA_POSITIONS: Record<string, [number, number, number]> = {
   default: [0, 6.123233995736766e-21, 0.0001],
   loading: [0.00002621880610890309, 0.00000515037441056466, 0.00009636414192870058],
   speaking: [0, -1.6481333940859815e-7, 0.00009999846226827279],
