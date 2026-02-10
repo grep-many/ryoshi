@@ -4,8 +4,6 @@ import { CameraControls } from "@react-three/drei";
 export const CameraManager = () => {
   return (
     <CameraControls
-      // dollySpeed={-1}
-      zoom={[1, 1]}
       polarRotateSpeed={-0.3}
       azimuthRotateSpeed={-0.3}
       mouseButtons={{

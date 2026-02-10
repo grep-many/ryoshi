@@ -7,7 +7,7 @@ import { itemPlacement } from "@/constants";
 import { useAITeacher } from "@/hooks";
 
 export const Experience = () => {
-  const { classroom } = useAITeacher();
+  const { classroom, teacher } = useAITeacher();
 
   return (
     <>
@@ -23,12 +23,12 @@ export const Experience = () => {
           <BoardSettings />
         </Html>
         <Teacher
-          teacher={"Nanami"}
+          teacher={teacher}
           position={[-1, -1.7, -2.5]}
           scale={1.5}
           rotation-y={degToRad(20)}
         />
-        <Gltf src="/models/classroom_default.glb" position={[0.2, -1.7, -0.4]} />
+        <Gltf src={`/models/classroom_${classroom}.glb`} position={[0.2, -1.7, -0.4]} />
       </Canvas>
     </>
   );

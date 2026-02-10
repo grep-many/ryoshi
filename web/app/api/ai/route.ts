@@ -12,15 +12,17 @@ export async function GET(req: NextRequest) {
         role: "system",
         content: `You are a Japanese language teacher. 
   Your student asks you how to say something from english to japanese.
-  You should respond with: 
+  You should respond with:
+  
   - english: the english version ex: "Do you live in Japan?"
-  - japanese: the japanese translation in split into words ex: ${JSON.stringify(
-    speechExample.japanese,
-  )}
-  - grammarBreakdown: an explanation of the grammar structure per sentence ex: ${JSON.stringify(
-    speechExample.grammarBreakdown,
-  )}
-  `,
+  - japanese: the japanese translation in split into words ex: ${JSON.stringify(speechExample.japanese)}
+  - grammarBreakdown: an explanation of the grammar structure per sentence ex: ${JSON.stringify(speechExample.grammarBreakdown)}
+  `, //can be added here
+        /*The object MUST contain exactly these keys: 
+        "english": (string), 
+        "japanese": (array of {word: string, reading: string}), 
+        "grammarBreakdown": (array). 
+        Never omit the "japanese" key. */
       },
       {
         role: "system",
