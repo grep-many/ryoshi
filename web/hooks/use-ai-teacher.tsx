@@ -1,10 +1,9 @@
-import { TeacherOpt } from "@/components";
+import { TeacherOpt } from "@/components/teacher"; // Ensure this matches your teacher component export
 import { create } from "zustand";
 
 // --- Interfaces ---
 
 export interface JapaneseWord {
-  map: any;
   word: string;
   reading?: string;
 }
@@ -31,9 +30,9 @@ export interface Message {
   id: number;
   question: string;
   answer?: AIResponse;
-  speech?: string;
+  speech?: SpeechType;
   audioPlayer?: HTMLAudioElement | null;
-  visemes?: any; // Replace 'any' with your specific viseme type if known
+  visemes?: any; // Ideally [number, number][] based on Azure/AWS TTS standards
 }
 
 export type SpeechType = "formal" | "casual";
@@ -79,17 +78,14 @@ export const useAITeacher = create<AITeacherState>((set, get) => ({
       teacher,
       messages: state.messages.map((message) => ({
         ...message,
-        audioPlayer: null, // New teacher, new Voice
+        audioPlayer: null, // Reset audio player for new teacher voice
       })),
     }));
   },
 
   setClassroom: (classroom) => set({ classroom }),
-
   setFurigana: (furigana) => set({ furigana }),
-
   setEnglish: (english) => set({ english }),
-
   setSpeech: (speech) => set({ speech }),
 
   askAI: async (question: string) => {
@@ -101,7 +97,6 @@ export const useAITeacher = create<AITeacherState>((set, get) => ({
     const speech = get().speech;
 
     try {
-      // Ask AI
       const res = await fetch(`/api/ai?question=${encodeURIComponent(question)}&speech=${speech}`);
       const data: AIResponse = await res.json();
 
@@ -113,52 +108,59 @@ export const useAITeacher = create<AITeacherState>((set, get) => ({
       };
 
       set((state) => ({
-        currentMessage: message,
         messages: [...state.messages, message],
-        loading: false,
+        currentMessage: message,
       }));
 
+      // We don't set loading false here because playMessage handles the next loading state
       get().playMessage(message);
     } catch (error) {
       console.error("AI Request failed:", error);
       set({ loading: false });
     }
   },
+
   playMessage: async (message: Message) => {
     set({ currentMessage: message });
 
-    if (message.answer) {
-      // 1. Cancel any current speech
-      window.speechSynthesis.cancel();
+    if (!message.audioPlayer && message.answer) {
+      set({ loading: true });
 
-      // 2. Prepare the Japanese text
-      const japaneseText = message.answer.japanese.map((word) => word.word).join("");
-      const utterance = new SpeechSynthesisUtterance(japaneseText);
+      try {
+        const japaneseText = message.answer.japanese.map((word) => word.word).join("");
+        const audioRes = await fetch(
+          `/api/tts?teacher=${get().teacher}&text=${encodeURIComponent(japaneseText)}`,
+        );
 
-      // 3. Select a Japanese voice
-      const voices = window.speechSynthesis.getVoices();
-      const jaVoice = voices.find(v => v.lang.startsWith("ja")) || voices[0];
-      utterance.voice = jaVoice;
-      utterance.lang = "ja-JP";
+        const audioBlob = await audioRes.blob();
+        const visemesHeader = audioRes.headers.get("visemes");
+        const visemes = visemesHeader ? JSON.parse(visemesHeader) : [];
 
-      // 4. Distinction Logic (Male vs Female)
-      if (get().teacher === "Naoki") {
-        // Naoki: Deeper pitch, slightly slower for a more masculine resonance
-        utterance.pitch = 0.8; 
-        utterance.rate = 0.85; 
-      } else {
-        // Nanami: Higher pitch, natural speed
-        utterance.pitch = 1.2;
-        utterance.rate = 1.0;
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audioPlayer = new Audio(audioUrl);
+
+        message.visemes = visemes;
+        message.audioPlayer = audioPlayer;
+
+        message.audioPlayer.onended = () => {
+          set({ currentMessage: null });
+        };
+
+        // Update the specific message in the list with its new audioPlayer
+        set((state) => ({
+          loading: false,
+          messages: state.messages.map((m) => (m.id === message.id ? message : m)),
+        }));
+      } catch (error) {
+        console.error("TTS Request failed:", error);
+        set({ loading: false });
+        return;
       }
+    }
 
-      // 5. Handling Animation (Fake Visemes)
-      // Since browser TTS doesn't provide real visemes, we simulate them
-      utterance.onstart = () => set({ loading: false });
-      utterance.onend = () => set({ currentMessage: null });
-
-      // 6. Speak
-      window.speechSynthesis.speak(utterance);
+    if (message.audioPlayer) {
+      message.audioPlayer.currentTime = 0;
+      message.audioPlayer.play();
     }
   },
 
