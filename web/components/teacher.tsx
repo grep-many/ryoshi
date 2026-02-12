@@ -1,6 +1,6 @@
 "use client";
 
-import { useAITeacher } from "@/hooks";
+import { useAITeacher, TeacherOpt, teachers } from "@/hooks";
 import { Html, useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import React, { useEffect, useRef, useState } from "react";
@@ -11,16 +11,14 @@ import { GLTF } from "three-stdlib";
 
 // Constants
 const ANIMATION_FADE_TIME = 0.5;
-export const teachers = ["Nanami", "Naoki"] as const;
-export type TeacherOpt = (typeof teachers)[number];
 
-// Types
-type TeacherActionName = "Idle" | "Talking" | "Talking2" | "Thinking";
-
+// Typing for the GLTF structure
 interface TeacherGLTF extends GLTF {
   nodes: { [key: string]: THREE.Object3D };
   materials: { [key: string]: THREE.Material };
 }
+
+type TeacherActionName = "Idle" | "Talking" | "Talking2" | "Thinking";
 
 interface Props extends React.ComponentPropsWithoutRef<"group"> {
   teacher: TeacherOpt;
@@ -31,7 +29,7 @@ export function Teacher({ teacher, ...props }: Props) {
 
   // Load Teacher Model & Animations
   const { scene } = useGLTF(`/models/Teacher_${teacher}.glb`) as TeacherGLTF;
-  const { animations } = useGLTF(`/models/animations_${teacher}.glb`) as TeacherGLTF;
+  const { animations } = useGLTF(`/models/animations_${teacher}.glb`);
 
   // Use generic for useAnimations to get typed actions
   const { actions, mixer } = useAnimations(animations, group);
@@ -42,7 +40,7 @@ export function Teacher({ teacher, ...props }: Props) {
 
   const { currentMessage, loading } = useAITeacher();
 
-  // Material setup - Recreating materials to ensure they are standard
+  // Material setup - ensuring standard material for better lighting/performance
   useEffect(() => {
     scene.traverse((child) => {
       if (child instanceof Mesh && child.material) {
@@ -84,7 +82,10 @@ export function Teacher({ teacher, ...props }: Props) {
     }
   }, [currentMessage, loading]);
 
-  // Helper for Morph Targets
+  /**
+   * Helper for Morph Targets
+   * target can be a name (string) or index (number)
+   */
   const lerpMorphTarget = (target: string | number, value: number, speed = 0.1) => {
     scene.traverse((child) => {
       if (
@@ -92,7 +93,8 @@ export function Teacher({ teacher, ...props }: Props) {
         child.morphTargetDictionary &&
         child.morphTargetInfluences
       ) {
-        const index = typeof target === "string" ? child.morphTargetDictionary[target] : target;
+        const index =
+          typeof target === "string" ? child.morphTargetDictionary[target] : (target as number);
 
         if (index !== undefined && child.morphTargetInfluences[index] !== undefined) {
           child.morphTargetInfluences[index] = MathUtils.lerp(
@@ -106,26 +108,38 @@ export function Teacher({ teacher, ...props }: Props) {
   };
 
   useFrame(() => {
-    // Facial Expressions
+    // 1. CONSTANT FACIAL EXPRESSIONS
     lerpMorphTarget("mouthSmile", 0.2, 0.5);
     lerpMorphTarget("eye_close", blink ? 1 : 0, 0.5);
 
-    // Reset Talking Morph Targets
+    // 2. MOUTH RESET (This ensures the mouth closes perfectly when not talking)
+    // We reset indices 0-21 every frame so lerp pulls them back to 0
     for (let i = 0; i <= 21; i++) {
       lerpMorphTarget(i, 0, 0.1);
     }
 
-    // Lip Sync Logic
-    if (currentMessage?.visemes && currentMessage?.audioPlayer) {
+    // 3. LIP SYNC LOGIC (Overwrites reset if audio is active)
+    if (
+      currentMessage &&
+      currentMessage.visemes &&
+      (currentMessage as any).audioContext &&
+      (currentMessage as any).startTime !== undefined
+    ) {
+      // Calculate elapsed time from the Web Audio Context
+      const playbackTimeMs =
+        ((currentMessage as any).audioContext.currentTime - (currentMessage as any).startTime) * 1000;
+
+      // Find the current viseme based on timing
       for (let i = currentMessage.visemes.length - 1; i >= 0; i--) {
         const viseme = currentMessage.visemes[i];
-        if (currentMessage.audioPlayer.currentTime * 1000 >= viseme[0]) {
-          lerpMorphTarget(viseme[1], 1, 0.2);
+        if (playbackTimeMs >= viseme[0]) {
+          // Viseme indices usually map to 0-5 (A, I, U, E, O)
+          lerpMorphTarget(viseme[1], 1, 0.25);
           break;
         }
       }
 
-      // Loop talking animations
+      // Handle Animation Transitions for Talking
       const currentAction = actions[animation];
       if (
         currentAction &&
@@ -167,7 +181,7 @@ export function Teacher({ teacher, ...props }: Props) {
           <div className="flex -translate-x-1/2 items-center justify-center">
             <span className="relative flex h-8 w-8 items-center justify-center">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75"></span>
-              <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-black duration-75">
+              <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/80 font-bold text-black">
                 {thinkingText}
               </span>
             </span>
@@ -179,7 +193,7 @@ export function Teacher({ teacher, ...props }: Props) {
   );
 }
 
-// Preload models
+// Preload assets for a smooth experience
 teachers.forEach((teacher) => {
   useGLTF.preload(`/models/Teacher_${teacher}.glb`);
   useGLTF.preload(`/models/animations_${teacher}.glb`);
