@@ -123,49 +123,86 @@ export const useAITeacher = create<AITeacherState>((set, get) => ({
   playMessage: async (message: Message) => {
     set({ currentMessage: message });
 
+    // 1. If we haven't fetched the audio data yet
     if (!message.audioPlayer && message.answer) {
       set({ loading: true });
 
       try {
         const japaneseText = message.answer.japanese.map((word) => word.word).join("");
+
+        // Fetch the Google TTS buffer from your backend
         const audioRes = await fetch(
           `/api/tts?teacher=${get().teacher}&text=${encodeURIComponent(japaneseText)}`,
         );
 
-        const audioBlob = await audioRes.blob();
+        if (!audioRes.ok) throw new Error("Failed to fetch audio");
+
+        const arrayBuffer = await audioRes.arrayBuffer();
         const visemesHeader = audioRes.headers.get("visemes");
         const visemes = visemesHeader ? JSON.parse(visemesHeader) : [];
 
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audioPlayer = new Audio(audioUrl);
+        // 2. Setup Web Audio API Context
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
 
-        message.visemes = visemes;
-        message.audioPlayer = audioPlayer;
+        // We "fake" the audioPlayer object to maintain your interface structure
+        // but we'll use a custom play function
+        const playAudio = async () => {
+          const source = audioContext.createBufferSource();
+          source.buffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
 
-        message.audioPlayer.onended = () => {
-          set({ currentMessage: null });
+          // --- VOICE ALTERATION LOGIC ---
+          if (get().teacher === "Naoki") {
+            // Naoki: Deepen the voice (cents). -600 to -800 is a good "male" range.
+            source.detune.value = -700;
+            // source.playbackRate.value = 0.95; // Slightly slower for masculine tone
+          }
+          // else {
+          //   // Nanami: Keep it natural or slightly higher/brighter
+          //   source.detune.value = 50;
+          //   source.playbackRate.value = 1.0;
+          // }
+
+          source.connect(audioContext.destination);
+          source.start(0);
+
+          source.onended = () => {
+            set({ currentMessage: null });
+          };
+
+          // Store the source so we can stop it later if needed
+          (message as any).activeSource = source;
         };
 
-        // Update the specific message in the list with its new audioPlayer
+        // Attach our custom logic to the message object
+        message.visemes = visemes;
+        (message as any).playInternal = playAudio;
+
         set((state) => ({
           loading: false,
           messages: state.messages.map((m) => (m.id === message.id ? message : m)),
         }));
+
+        await playAudio();
       } catch (error) {
-        console.error("TTS Request failed:", error);
+        console.error("Frontend TTS Playback failed:", error);
         set({ loading: false });
         return;
       }
-    }
-
-    if (message.audioPlayer) {
-      message.audioPlayer.currentTime = 0;
-      message.audioPlayer.play();
+    } else if ((message as any).playInternal) {
+      // If audio is already loaded, just play it
+      await (message as any).playInternal();
     }
   },
 
   stopMessage: (message: Message) => {
-    message.audioPlayer?.pause();
+    // If using Web Audio API, we stop the source node
+    if ((message as any).activeSource) {
+      try {
+        (message as any).activeSource.stop();
+      } catch (e) {
+        // Source might already be stopped
+      }
+    }
     set({ currentMessage: null });
   },
 }));
