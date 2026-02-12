@@ -1,11 +1,10 @@
-"use client"
+"use client";
 import { CAMERA_POSITIONS, CAMERA_ZOOMS } from "@/constants";
 import { useAITeacher } from "@/hooks";
 import { CameraControls } from "@react-three/drei";
 import { button, useControls } from "leva";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-
 
 export const CameraManager = () => {
   const controls = useRef<CameraControls>(null);
@@ -27,7 +26,6 @@ export const CameraManager = () => {
         const position = new THREE.Vector3();
         controls.current.getPosition(position);
         const zoom = controls.current.camera.zoom;
-        console.log([position.x, position.y, position.z], zoom);
       }
     }),
   });
@@ -35,18 +33,21 @@ export const CameraManager = () => {
   return (
     <CameraControls
       ref={controls}
-      minZoom={1}
+      minZoom={0.5}
       maxZoom={3}
-      polarRotateSpeed={-0.3}
-      azimuthRotateSpeed={-0.3}
       mouseButtons={{
-        left: 1, // ACTION.ROTATE
-        wheel: 16, // ACTION.ZOOM
+        left: 1, // Rotate (ACTION.ROTATE)
+        middle: 0, // None
+        right: 0, // None
+        wheel: 16, // Zoom (ACTION.ZOOM)
       }}
       touches={{
-        one: 32, // ACTION.TOUCH_ROTATE
-        two: 512, // ACTION.TOUCH_ZOOM
+        one: 32, // One finger: Rotate (ACTION.TOUCH_ROTATE)
+        two: 512, // Two fingers: Pinch to Zoom (ACTION.TOUCH_ZOOM)
+        three: 0, // None
       }}
+      dollySpeed={0.5}
+      truckSpeed={0} // Disable "panning" (moving camera sideways) to keep focus on teacher
     />
   );
 };

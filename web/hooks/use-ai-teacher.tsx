@@ -128,7 +128,7 @@ export const useAITeacher = create<AITeacherState>((set, get) => ({
       set({ loading: true });
 
       try {
-        const japaneseText = message.answer.japanese.map((word) => word.word).join("");
+        const japaneseText = message.answer.japanese?.map((word) => word.word).join("");
 
         // Fetch the Google TTS buffer from your backend
         const audioRes = await fetch(

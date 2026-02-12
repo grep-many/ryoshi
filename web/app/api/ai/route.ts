@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 /**
  * ARCHITECT: Converts AI pipe-string to the complex Frontend JSON structure.
@@ -47,9 +47,17 @@ export async function GET(req: NextRequest) {
   const question = searchParams.get("question") || "Where is the hospital?";
   const speech = searchParams.get("speech") || "formal";
 
-  // Position-based prompt for 1.5B/0.5B models
-  const prompt = `Task: Translate to ${speech} Japanese.
-Example: Hello | こんにちは:konnichiwa | こんにちは:Hello:Greeting
+  /**
+   * REFINED PROMPT:
+   * 1. We specify "High Accuracy"
+   * 2. We provide a "Speech Style" context more clearly
+   * 3. We use a more realistic Japanese example
+   */
+  const prompt = `Japanese Translation Database. 
+Accuracy: High.
+Style: ${speech}.
+
+Example: "Do you eat?" | 食べますか:たべますか | 食べます:to eat:Verb, か:?:Particle
 Input: "${question}"
 Result: ${question} |`;
 
@@ -59,31 +67,21 @@ Result: ${question} |`;
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         prompt: prompt,
-        n_predict: 256,
-        temperature: 0.1,
-        stop: ["\n", "Input:"],
-        // Strict grammar prevents the model from rambling
+        n_predict: 200,
+        temperature: 0.1, // Keep it low for accuracy
+        top_p: 0.9, // Allow for some natural word choice
+        stop: ["\n", "Input:", "Example:"],
         grammar: `root ::= section "|" section\nsection ::= [^|\\n]+`,
       }),
     });
 
     if (!response.ok) throw new Error("Local AI server is not responding");
-
     const data = await response.json();
-
-    // Reconstruct: Forced English | AI Japanese | AI Grammar
     const aiRaw = `${question} | ` + data.content.trim();
 
-    const finalData = buildJsonFromPipe(aiRaw, question);
-
-    return Response.json(finalData);
+    return NextResponse.json(buildJsonFromPipe(aiRaw, question));
   } catch (error: any) {
     console.error("Next.js AI Route Error:", error.message);
-
-    // Safety Fallback: Return a 500 or a simplified error object
-    return Response.json(
-      { error: "The translator is resting. Try again in a moment." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Translation error" }, { status: 500 });
   }
 }
