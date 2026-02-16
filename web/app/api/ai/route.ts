@@ -70,6 +70,7 @@ Result: ${question} |`;
       },
       body: JSON.stringify({
         prompt: prompt,
+        model: "teacher",
         n_predict: 200,
         temperature: 0.1, // Keep it low for accuracy
         top_p: 0.9, // Allow for some natural word choice

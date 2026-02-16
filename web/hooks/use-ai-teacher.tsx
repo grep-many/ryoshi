@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 // --- Interfaces ---
 
-export type TeacherOpt = "Nanami"|"Naoki"
+export type TeacherOpt = "Nanami" | "Naoki";
 
 export interface JapaneseWord {
   word: string;

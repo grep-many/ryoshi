@@ -127,7 +127,8 @@ export function Teacher({ teacher, ...props }: Props) {
     ) {
       // Calculate elapsed time from the Web Audio Context
       const playbackTimeMs =
-        ((currentMessage as any).audioContext.currentTime - (currentMessage as any).startTime) * 1000;
+        ((currentMessage as any).audioContext.currentTime - (currentMessage as any).startTime) *
+        1000;
 
       // Find the current viseme based on timing
       for (let i = currentMessage.visemes.length - 1; i >= 0; i--) {

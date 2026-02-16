@@ -7,8 +7,10 @@
 
   /* Adding your custom gradients */
   --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
-  --background-image-gradient-conic: conic-gradient(from 180deg at 50% 50%,
-      var(--tw-gradient-stops));
+  --background-image-gradient-conic: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--tw-gradient-stops)
+  );
 
   /* Defining the RGB variables for your custom background logic */
   --color-foreground-rgb: 0, 0, 0;
@@ -29,9 +31,8 @@
 @layer base {
   body {
     color: rgb(var(--color-foreground-rgb));
-    background: linear-gradient(to bottom,
-        transparent,
-        rgb(var(--color-background-end-rgb))) rgb(var(--color-background-start-rgb));
+    background: linear-gradient(to bottom, transparent, rgb(var(--color-background-end-rgb)))
+      rgb(var(--color-background-start-rgb));
   }
 }
 
