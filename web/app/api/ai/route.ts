@@ -62,9 +62,12 @@ Input: "${question}"
 Result: ${question} |`;
 
   try {
-    const response = await fetch("http://127.0.0.1:8080/completion", {
+    const response = await fetch(process.env.AI_SERVER_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.AI_SERVER_KEY}`,
+      },
       body: JSON.stringify({
         prompt: prompt,
         n_predict: 200,
@@ -75,7 +78,7 @@ Result: ${question} |`;
       }),
     });
 
-    if (!response.ok) throw new Error("Local AI server is not responding");
+    if (!response.ok) throw new Error("AI server is not responding");
     const data = await response.json();
     const aiRaw = `${question} | ` + data.content.trim();
 
