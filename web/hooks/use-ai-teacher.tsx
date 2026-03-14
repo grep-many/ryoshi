@@ -63,6 +63,8 @@ interface AITeacherState {
 // --- Store ---
 
 export const teachers: TeacherOpt[] = ["Nanami", "Naoki"];
+const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+const apiHeaders = apiKey ? { "x-api-key": apiKey } : undefined;
 
 export const useAITeacher = create<AITeacherState>((set, get) => ({
   messages: [],
@@ -98,7 +100,10 @@ export const useAITeacher = create<AITeacherState>((set, get) => ({
     const speech = get().speech;
 
     try {
-      const res = await fetch(`/api/ai?question=${encodeURIComponent(question)}&speech=${speech}`);
+      const res = await fetch(`/api/ai?question=${encodeURIComponent(question)}&speech=${speech}`, {
+        headers: apiHeaders,
+      });
+      if (!res.ok) throw new Error(`AI request failed: ${res.status}`);
       const data: AIResponse = await res.json();
 
       const message: Message = {
@@ -127,10 +132,15 @@ export const useAITeacher = create<AITeacherState>((set, get) => ({
     if (!message.visemes && message.answer) {
       set({ loading: true });
       try {
-        const japaneseText = message.answer.japanese?.map((word) => word.word).join("");
+        const japaneseText = message.answer.japanese?.map((word) => word.word).join("") ?? "";
+        if (!japaneseText.trim()) {
+          throw new Error("TTS skipped: empty Japanese text");
+        }
         const audioRes = await fetch(
           `/api/tts?teacher=${get().teacher}&text=${encodeURIComponent(japaneseText)}`,
+          { headers: apiHeaders },
         );
+        if (!audioRes.ok) throw new Error(`TTS request failed: ${audioRes.status}`);
 
         const arrayBuffer = await audioRes.arrayBuffer();
         const visemes = JSON.parse(audioRes.headers.get("visemes") || "[]");
