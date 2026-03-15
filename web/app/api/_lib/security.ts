@@ -20,8 +20,7 @@ declare global {
   var __ryoshiRateLimit: Map<string, RateLimitEntry> | undefined;
 }
 
-const rateLimitStore: Map<string, RateLimitEntry> =
-  globalThis.__ryoshiRateLimit ?? new Map();
+const rateLimitStore: Map<string, RateLimitEntry> = globalThis.__ryoshiRateLimit ?? new Map();
 if (!globalThis.__ryoshiRateLimit) {
   globalThis.__ryoshiRateLimit = rateLimitStore;
 }
@@ -157,24 +156,15 @@ export function enforceApiSecurity(req: NextRequest, options: ApiGuardOptions) {
   }
 
   if (authRequired && !hasKey) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401, headers: mergeHeaders() },
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: mergeHeaders() });
   }
 
   if (!authRequired && apiKey && !originAllowed && !hasKey) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401, headers: mergeHeaders() },
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: mergeHeaders() });
   }
 
   if (allowedOrigins.length > 0 && !originAllowed && !hasKey) {
-    return NextResponse.json(
-      { error: "Forbidden" },
-      { status: 403, headers: mergeHeaders() },
-    );
+    return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: mergeHeaders() });
   }
 
   const ip = getClientIp(req);
@@ -185,10 +175,7 @@ export function enforceApiSecurity(req: NextRequest, options: ApiGuardOptions) {
   );
 
   if (!rate.ok) {
-    const retryAfterSeconds = Math.max(
-      1,
-      Math.ceil((rate.resetAt - Date.now()) / 1000),
-    );
+    const retryAfterSeconds = Math.max(1, Math.ceil((rate.resetAt - Date.now()) / 1000));
 
     return NextResponse.json(
       { error: "Too many requests" },
