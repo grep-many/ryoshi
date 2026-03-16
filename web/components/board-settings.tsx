@@ -1,7 +1,6 @@
 "use client";
 
-import { teachers, useAITeacher, SpeechType, ClassRoomType } from "@/hooks";
-import type { TeacherOpt } from "./teacher";
+import { teachers, useAITeacher, SpeechType, ClassRoomType, TeacherOpt } from "@/hooks";
 import React from "react";
 
 export const BoardSettings: React.FC = () => {
