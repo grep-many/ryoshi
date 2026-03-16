@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ryoshi Web App
 
-## Getting Started
+The web app renders a 3D Japanese learning experience using Next.js, React, and Three.js. It calls local API routes for AI translation and text-to-speech.
 
-First, run the development server:
+## Features
+
+- 3D classroom scene with animated teacher
+- English-to-Japanese translation with grammar breakdowns
+- Furigana and English display toggles
+- Lip-synced TTS playback
+
+## Requirements
+
+- Node.js (compatible with Next.js 16)
+- npm
+
+## Install
+
+```bash
+npm install
+```
+
+## Run (Dev)
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Build
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Start (Prod)
 
-## Learn More
+```bash
+npm run start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## API Routes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `GET /api/ai` calls the AI service defined by `AI_SERVER_URL`.
+- `GET /api/tts` fetches Google TTS audio and returns viseme timing metadata.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Configuration
 
-## Deploy on Vercel
+| Variable | Description | Required | Default |
+| --- | --- | --- | --- |
+| `AI_SERVER_URL` | AI completion endpoint used by `/api/ai`. | Yes (for AI) | None |
+| `AI_SERVER_KEY` | Bearer token for the AI service. | Yes (for AI) | None |
+| `API_ACCESS_KEY` | API key for protecting API routes. | Conditional | None |
+| `API_AUTH_REQUIRED` | If `true`, routes require `API_ACCESS_KEY`. | No | `false` |
+| `APP_ORIGIN` | Comma-separated allowlist for request origins. | No | Empty (allow all) |
+| `AI_RATE_LIMIT_MAX` | Max AI requests per IP per window. | No | `20` |
+| `AI_RATE_LIMIT_WINDOW_MS` | AI rate limit window in ms. | No | `60000` |
+| `AI_MAX_CHARS` | Max characters per AI question. | No | `200` |
+| `TTS_RATE_LIMIT_MAX` | Max TTS requests per IP per window. | No | `30` |
+| `TTS_RATE_LIMIT_WINDOW_MS` | TTS rate limit window in ms. | No | `60000` |
+| `TTS_MAX_CHARS` | Max characters per TTS request. | No | `300` |
+| `TTS_FETCH_TIMEOUT_MS` | Upstream TTS fetch timeout in ms. | No | `8000` |
+| `NEXT_PUBLIC_API_KEY` | Client-side API key forwarded as `x-api-key`. | No | None |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## AI Output Notice
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> **Warning**  
+> AI-generated translations can be inaccurate or hallucinated. Verify outputs before using them in real-world or high-stakes contexts.
